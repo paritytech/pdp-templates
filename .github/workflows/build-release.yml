@@ -40,16 +40,16 @@ jobs:
             repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
             ref: v2.0.1
             folder: polkadot-runtime-templates/generic-template
-            wasm_path: target/release/wbuild/node-template-runtime/node_template_runtime.compact.compressed.wasm
-            binary_path: target/release/node-template
+            wasm_path: target/release/wbuild/generic-runtime-template/generic_runtime_template.compact.compressed.wasm
+            binary_path: target/release/generic-template
             rust_version: nightly-2024-06-12
             omni_node_support: false
           - name: openzeppelin-evm
             repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
             ref: v2.0.1
             folder: polkadot-runtime-templates/evm-template
-            wasm_path: target/release/wbuild/node-template-runtime/node_template_runtime.compact.compressed.wasm
-            binary_path: target/release/node-template
+            wasm_path: target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm
+            binary_path: target/release/evm-template
             rust_version: nightly-2024-06-12
             omni_node_support: false
     steps:
@@ -63,6 +63,7 @@ jobs:
     - name: Install shared dependencies (macOS)
       if: matrix.os == 'parity-macos'
       run: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         brew install openssl pkg-config git clang curl llvm protobuf jq cmake
 
     # - name: Set up Docker Buildx
