@@ -162,7 +162,7 @@ jobs:
         retention-days: 5
 
     - name: Create Release and Upload Assets
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
