@@ -60,11 +60,12 @@ jobs:
         sudo apt install -y openssl pkg-config g++ git clang curl libssl-dev llvm libudev-dev libclang-dev make protobuf-compiler jq
         sudo apt install -y cmake docker
 
+    - name: Install brew
+      uses: Homebrew/actions/setup-homebrew@1ccc07ccd54b6048295516a3eb89b192c35057dc # master from 12.09.2024
+
     - name: Install shared dependencies (macOS)
       if: matrix.os == 'parity-macos'
       run: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
         brew install --cask clay
         brew install openssl pkg-config git clang curl llvm protobuf jq cmake
 
