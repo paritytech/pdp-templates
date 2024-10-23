@@ -148,7 +148,7 @@ jobs:
       run: |
         mkdir -p output
         echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
-        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
         cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }} || echo "Failed to copy binary"
         echo "Output directory contents:"
@@ -178,5 +178,5 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          ./output/${{ matrix.template.name }}.wasm
+          ./output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}.wasm
           ./output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}
