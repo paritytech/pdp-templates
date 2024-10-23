@@ -20,14 +20,14 @@ jobs:
       matrix:
         os: [parity-large, parity-macos]
         template:
-        #   - name: polkadot-sdk-parachain
-        #     repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
-        #     ref: master
-        #     folder: polkadot-sdk-parachain-template
-        #     wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-        #     binary_path: target/release/parachain-template-node
-        #     rust_version: nightly-2024-09-11
-        #     omni_node_support: true
+          - name: polkadot-sdk-parachain
+            repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
+            ref: master
+            folder: polkadot-sdk-parachain-template
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-09-11
+            omni_node_support: true
           - name: frontier
             repo: https://github.com/polkadot-evm/frontier.git
             ref: master
@@ -150,7 +150,7 @@ jobs:
         echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
         cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
-        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }} || echo "Failed to copy binary"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }} || echo "Failed to copy binary"
         echo "Output directory contents:"
         ls -R output
 
@@ -174,7 +174,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}-${{ env.LOWERCASE_OS }}
-        name: Release ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}-${{ env.LOWERCASE_OS }}
+        name: ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}-${{ env.LOWERCASE_OS }}
         draft: false
         prerelease: false
         files: |
