@@ -5,8 +5,6 @@ on:
     branches: [ main ]
 
 env:
-#   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-#   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   CARGO_TERM_COLOR: always
 
 permissions:
@@ -15,11 +13,12 @@ permissions:
 
 jobs:
   build-and-push:
-    runs-on: parity-large
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
+        os: [parity-large, parity-macos]
         include:
         #   - name: polkadot-sdk-parachain
         #     repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
@@ -54,11 +53,17 @@ jobs:
             rust_version: nightly-2024-06-12
             omni_node_support: false
     steps:
-    - name: Install shared dependencies
+    - name: Install shared dependencies (Linux)
+      if: matrix.os == 'parity-large'
       run: |
         sudo apt update
         sudo apt install -y openssl pkg-config g++ git clang curl libssl-dev llvm libudev-dev libclang-dev make protobuf-compiler jq
         sudo apt install -y cmake docker
+
+    - name: Install shared dependencies (macOS)
+      if: matrix.os == 'parity-macos'
+      run: |
+        brew install openssl pkg-config git clang curl llvm protobuf jq cmake
 
     # - name: Set up Docker Buildx
     #   uses: docker/setup-buildx-action@v3
@@ -136,7 +141,7 @@ jobs:
         echo "Attempting to copy WASM file from: ${{ matrix.wasm_path }}"
         cp ${{ matrix.folder }}/${{ matrix.wasm_path }} output/${{ matrix.name }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.binary_path }}"
-        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }} || echo "Failed to copy binary"
+        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }}-${{ runner.os }} || echo "Failed to copy binary"
         echo "Output directory contents:"
         ls -R output
 
@@ -151,7 +156,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.name }}-artifacts
+        name: ${{ matrix.name }}-${{ runner.os }}-artifacts
         path: output/
         retention-days: 5
 
@@ -165,4 +170,4 @@ jobs:
         prerelease: false
         files: |
           ./output/${{ matrix.name }}.wasm
-          ./output/${{ matrix.name }}
+          ./output/${{ matrix.name }}-${{ runner.os }}
