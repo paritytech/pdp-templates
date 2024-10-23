@@ -1,0 +1,175 @@
+name: Build and Push Node Templates
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+#   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+#   DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  CARGO_TERM_COLOR: always
+
+permissions:
+  discussions: write
+  contents: write # for releases
+
+jobs:
+  build-and-push:
+    runs-on: parity-large
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: polkadot-sdk-parachain
+            repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
+            ref: master
+            folder: polkadot-sdk-parachain-template
+            target_folder: target
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-09-11
+            omni_node_support: true
+          - name: frontier
+            repo: https://github.com/polkadot-evm/frontier.git
+            ref: master
+            folder: frontier
+            wasm_path: target/release/wbuild/frontier-template-runtime/frontier_template_runtime.compact.compressed.wasm
+            binary_path: target/release/frontier-template-node
+            rust_version: nightly-2024-02-05
+            target_folder: target
+            omni_node_support: false
+          - name: openzeppelin-generic
+            repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
+            ref: v2.0.1
+            folder: polkadot-runtime-templates/generic-template
+            wasm_path: generic-template/target/release/wbuild/node-template-runtime/node_template_runtime.compact.compressed.wasm
+            binary_path: generic-template/target/release/node-template
+            rust_version: nightly-2024-06-12
+            target_folder: generic-template/target
+            omni_node_support: false
+          - name: openzeppelin-evm
+            repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
+            ref: v2.0.1
+            folder: polkadot-runtime-templates/evm-template
+            wasm_path: evm-template/target/release/wbuild/node-template-runtime/node_template_runtime.compact.compressed.wasm
+            binary_path: evm-template/target/release/node-template
+            rust_version: nightly-2024-06-12
+            target_folder: evm-template/target
+            omni_node_support: false
+    steps:
+    - name: Install shared dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y openssl pkg-config g++ git clang curl libssl-dev llvm libudev-dev libclang-dev make protobuf-compiler jq
+        sudo apt install -y cmake docker
+
+    # - name: Set up Docker Buildx
+    #   uses: docker/setup-buildx-action@v3
+
+    # - name: Login to DockerHub
+    #   uses: docker/login-action@v3
+    #   with:
+    #     username: ${{ env.DOCKERHUB_USERNAME }}
+    #     password: ${{ env.DOCKERHUB_TOKEN }}
+
+    - name: Clone template repository
+      id: template
+      run: |
+        git clone ${{ matrix.repo }}
+        cd ${{ matrix.folder }}
+        git checkout ${{ matrix.ref }}
+        
+        COMMIT_HASH=$(git rev-parse --short=8 HEAD)
+        echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust_version }}
+        target: wasm32-unknown-unknown
+        override: true
+        components: rustfmt, clippy, rust-src
+
+    - name: Cache Rust dependencies
+      uses: actions/cache@v4
+      id: cache
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ${{ matrix.folder }}/${{ matrix.target_folder }}/release/
+        key: ${{ runner.os }}-rust-${{ matrix.name }}-${{ matrix.rust_version }}-${{ steps.template.outputs.commit_hash }}
+        restore-keys: |
+          ${{ runner.os }}-rust-${{ matrix.name }}-${{ matrix.rust_version }}-
+          ${{ runner.os }}-rust-${{ matrix.name }}-
+
+    - name: Cache Debug Info
+      run: |
+        echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+        echo "Cache key: ${{ steps.cache.outputs.cache-primary-key }}"
+        echo "Cache result: ${{ steps.cache.outputs.cache-matched-key }}"
+        echo "Cargo home contents:"
+        echo "Target folder contents:"
+
+    - name: Check environment
+      run: |
+        rustc --version
+        cargo --version
+        df -h
+
+    - name: Build node
+      run: |
+        cd ${{ matrix.folder }}
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        cargo build --release
+        echo "Build completed. Checking target directory:"
+
+    - name: Post-build Cache Debug Info
+      run: |
+        echo "Post-build Cargo home contents:"
+        ls -R ~/.cargo || true
+        echo "Post-build Target folder contents:"
+        ls -R ${{ matrix.folder }}/${{ matrix.target_folder }} || true
+
+    - name: Copy output files
+      run: |
+        mkdir -p output
+        echo "Attempting to copy WASM file from: ${{ matrix.wasm_path }}"
+        cp ${{ matrix.folder }}/${{ matrix.wasm_path }} output/${{ matrix.name }}.wasm || echo "Failed to copy WASM file"
+        echo "Attempting to copy binary from: ${{ matrix.binary_path }}"
+        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }}-binary || echo "Failed to copy binary"
+        echo "Output directory contents:"
+        ls -R output
+
+    # - name: Build and push Docker image
+    #   uses: docker/build-push-action@v5
+    #   with:
+    #     context: .
+    #     file: ./Dockerfile
+    #     push: true
+    #     tags: ${{ env.DOCKERHUB_USERNAME }}/pdp:${{ matrix.name }}-${{ github.ref }},${{ env.DOCKERHUB_USERNAME }}/pdp:${{ matrix.name }}-latest
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.name }}-artifacts
+        path: output/
+        retention-days: 5
+
+    - name: Create Release and Upload Assets
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
+        name: Release ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
+        draft: false
+        prerelease: false
+        token: ${{ secrets.RELEASE_TOKEN }}
+        files: |
+          ./output/${{ matrix.name }}.wasm
+          ./output/${{ matrix.name }}-binary
