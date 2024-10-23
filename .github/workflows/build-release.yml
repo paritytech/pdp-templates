@@ -65,6 +65,7 @@ jobs:
       run: |
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         eval "$(/opt/homebrew/bin/brew shellenv)"
+        brew install --cask clay
         brew install openssl pkg-config git clang curl llvm protobuf jq cmake
 
     # - name: Set up Docker Buildx
