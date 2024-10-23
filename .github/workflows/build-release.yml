@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [parity-large, parity-macos]
-        include:
+        template:
         #   - name: polkadot-sdk-parachain
         #     repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
         #     ref: master
@@ -79,9 +79,9 @@ jobs:
     - name: Clone template repository
       id: template
       run: |
-        git clone ${{ matrix.repo }}
-        cd ${{ matrix.folder }}
-        git checkout ${{ matrix.ref }}
+        git clone ${{ matrix.template.repo }}
+        cd ${{ matrix.template.folder }}
+        git checkout ${{ matrix.template.ref }}
         
         COMMIT_HASH=$(git rev-parse --short=8 HEAD)
         echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
@@ -90,7 +90,7 @@ jobs:
       uses: actions-rs/toolchain@v1
       with:
         profile: minimal
-        toolchain: ${{ matrix.rust_version }}
+        toolchain: ${{ matrix.template.rust_version }}
         target: wasm32-unknown-unknown
         override: true
         components: rustfmt, clippy, rust-src
@@ -104,11 +104,11 @@ jobs:
           ~/.cargo/registry/index/
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
-          ${{ matrix.folder }}/target/release/
-        key: ${{ runner.os }}-rust-${{ matrix.name }}-${{ matrix.rust_version }}-${{ steps.template.outputs.commit_hash }}
+          ${{ matrix.template.folder }}/target/release/
+        key: ${{ runner.os }}-rust-${{ matrix.template.name }}-${{ matrix.template.rust_version }}-${{ steps.template.outputs.commit_hash }}
         restore-keys: |
-          ${{ runner.os }}-rust-${{ matrix.name }}-${{ matrix.rust_version }}-
-          ${{ runner.os }}-rust-${{ matrix.name }}-
+          ${{ runner.os }}-rust-${{ matrix.template.name }}-${{ matrix.template.rust_version }}-
+          ${{ runner.os }}-rust-${{ matrix.template.name }}-
 
     - name: Cache Debug Info
       run: |
@@ -124,7 +124,7 @@ jobs:
 
     - name: Build node
       run: |
-        cd ${{ matrix.folder }}
+        cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
         cargo build --release
@@ -135,15 +135,15 @@ jobs:
         echo "Post-build Cargo home contents:"
         ls -R ~/.cargo || true
         echo "Post-build Target folder contents:"
-        ls -R ${{ matrix.folder }}/target || true
+        ls -R ${{ matrix.template.folder }}/target || true
 
     - name: Copy output files
       run: |
         mkdir -p output
-        echo "Attempting to copy WASM file from: ${{ matrix.wasm_path }}"
-        cp ${{ matrix.folder }}/${{ matrix.wasm_path }} output/${{ matrix.name }}.wasm || echo "Failed to copy WASM file"
-        echo "Attempting to copy binary from: ${{ matrix.binary_path }}"
-        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }}-${{ runner.os }} || echo "Failed to copy binary"
+        echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
+        echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ runner.os }} || echo "Failed to copy binary"
         echo "Output directory contents:"
         ls -R output
 
@@ -158,7 +158,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.name }}-${{ runner.os }}-artifacts
+        name: ${{ matrix.template.name }}-${{ runner.os }}-artifacts
         path: output/
         retention-days: 5
 
@@ -166,10 +166,10 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
-        name: Release ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
+        tag_name: ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}
+        name: Release ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}
         draft: false
         prerelease: false
         files: |
-          ./output/${{ matrix.name }}.wasm
-          ./output/${{ matrix.name }}-${{ runner.os }}
+          ./output/${{ matrix.template.name }}.wasm
+          ./output/${{ matrix.template.name }}-${{ runner.os }}
