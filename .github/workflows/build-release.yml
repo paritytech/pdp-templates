@@ -171,4 +171,4 @@ jobs:
         prerelease: false
         files: |
           ./output/${{ matrix.name }}.wasm
-          ./output/${{ matrix.name }}-binary
+          ./output/${{ matrix.name }}
