@@ -148,7 +148,7 @@ jobs:
       run: |
         mkdir -p output
         echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
-        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}.wasm || echo "Failed to copy WASM file"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
         cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }} || echo "Failed to copy binary"
         echo "Output directory contents:"
@@ -169,14 +169,38 @@ jobs:
         path: output/
         retention-days: 5
 
-    - name: Create Release and Upload Assets
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  create-release:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release_assets
+        # Copy WASM files only from Linux artifacts (assuming Linux is always built)
+        cp artifacts/*-linux-artifacts/*.wasm release_assets/ || true
+        # Copy all binaries
+        cp artifacts/**/*-linux release_assets/
+        cp artifacts/**/*-macos release_assets/
+        echo "Release assets contents:"
+        ls -R release_assets
+
+    - name: Create Release
+      id: create_release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}
-        name: Release ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}
+        name: ${{ matrix.template.name }}-${{ matrix.template.ref }}-${{ steps.template.outputs.commit_hash }}
         draft: false
         prerelease: false
-        files: |
-          ./output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}.wasm
-          ./output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}
+        files: release_assets/*
+
+    - name: Display structure of downloaded files
+      run: ls -R artifacts
