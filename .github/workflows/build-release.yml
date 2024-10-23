@@ -61,13 +61,14 @@ jobs:
         sudo apt install -y cmake docker
 
     - name: Install brew
+      if: matrix.os == 'parity-macos'
       uses: Homebrew/actions/setup-homebrew@1ccc07ccd54b6048295516a3eb89b192c35057dc # master from 12.09.2024
 
     - name: Install shared dependencies (macOS)
       if: matrix.os == 'parity-macos'
       run: |
-        brew install --cask clay
-        brew install openssl pkg-config git clang curl llvm protobuf jq cmake
+        xcode-select --install || true
+        brew install openssl pkg-config git curl llvm protobuf jq cmake
 
     # - name: Set up Docker Buildx
     #   uses: docker/setup-buildx-action@v3
@@ -124,6 +125,10 @@ jobs:
         cargo --version
         df -h
 
+    # Add this step after the "Check environment" step
+    - name: Set lowercase OS name
+      run: echo "LOWERCASE_OS=$(echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
     - name: Build node
       run: |
         cd ${{ matrix.template.folder }}
@@ -145,7 +150,7 @@ jobs:
         echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
         cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
-        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ runner.os }} || echo "Failed to copy binary"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }} || echo "Failed to copy binary"
         echo "Output directory contents:"
         ls -R output
 
@@ -160,7 +165,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.template.name }}-${{ runner.os }}-artifacts
+        name: ${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}-artifacts
         path: output/
         retention-days: 5
 
@@ -174,4 +179,4 @@ jobs:
         prerelease: false
         files: |
           ./output/${{ matrix.template.name }}.wasm
-          ./output/${{ matrix.template.name }}-${{ runner.os }}
+          ./output/${{ matrix.template.name }}-${{ env.LOWERCASE_OS }}
