@@ -142,7 +142,7 @@ jobs:
         echo "Attempting to copy WASM file from: ${{ matrix.wasm_path }}"
         cp ${{ matrix.folder }}/${{ matrix.wasm_path }} output/${{ matrix.name }}.wasm || echo "Failed to copy WASM file"
         echo "Attempting to copy binary from: ${{ matrix.binary_path }}"
-        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }}-binary || echo "Failed to copy binary"
+        cp ${{ matrix.folder }}/${{ matrix.binary_path }} output/${{ matrix.name }} || echo "Failed to copy binary"
         echo "Output directory contents:"
         ls -R output
 
@@ -169,7 +169,6 @@ jobs:
         name: Release ${{ matrix.name }}-${{matrix.ref}}-${{ steps.template.outputs.commit_hash }}
         draft: false
         prerelease: false
-        token: ${{ secrets.RELEASE_TOKEN }}
         files: |
           ./output/${{ matrix.name }}.wasm
           ./output/${{ matrix.name }}-binary
