@@ -167,7 +167,7 @@ jobs:
         cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
-        cargo build --production
+        cargo build --release
         echo "Build completed."
 
     - name: Post-build Cache Debug Info
