@@ -52,6 +52,39 @@ jobs:
             binary_path: target/release/evm-template-node
             rust_version: nightly-2024-06-12
             omni_node_support: false
+          - name: pop-standard
+            repo: https://github.com/r0gue-io/base-parachain.git
+            ref: polkadot-stable2412
+            folder: base-parachain
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-09-04
+            omni_node_support: false
+          - name: pop-assets
+            repo: https://github.com/r0gue-io/assets-parachain.git
+            ref: polkadot-stable2412
+            folder: assets-parachain
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-10-15
+            omni_node_support: false
+          - name: pop-contracts
+            repo: https://github.com/r0gue-io/contracts-parachain.git 
+            ref: polkadot-stable2409
+            folder: contracts-parachain
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-09-04
+            omni_node_support: false
+          - name: pop-evm
+            repo: https://github.com/r0gue-io/evm-parachain.git
+            ref: polkadot-stable2407
+            folder: evm-parachain
+            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
+            binary_path: target/release/parachain-template-node
+            rust_version: nightly-2024-04-09
+            omni_node_support: false
+
     steps:
     - name: Install shared dependencies (Linux)
       if: matrix.os == 'parity-large'
