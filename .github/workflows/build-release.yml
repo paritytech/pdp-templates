@@ -1,8 +1,22 @@
 name: Build and Push Node Templates
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch: 
+    inputs:
+      template:
+        description: 'Template to build'
+        required: false
+        type: choice
+        options:
+          - all
+          - polkadot-sdk-parachain
+          - openzeppelin-generic
+          - openzeppelin-evm
+          - pop-standard
+          - pop-assets
+          - pop-contracts
+          - pop-evm
+          - blue-l2
 
 env:
   CARGO_TERM_COLOR: always
@@ -12,78 +26,114 @@ permissions:
   contents: write # for releases
 
 jobs:
+  determine-templates:
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.set-templates.outputs.templates }}
+    steps:
+      - id: set-templates
+        run: |
+          ALL_TEMPLATES='[
+            {
+              "name": "polkadot-sdk-parachain",
+              "repo": "https://github.com/paritytech/polkadot-sdk-parachain-template.git",
+              "ref": "master",
+              "folder": "polkadot-sdk-parachain-template",
+              "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
+              "binary": "parachain-template-node",
+              "rust_version": "1.85.0",
+              "omni_node_support": false
+            },
+            {
+              "name": "openzeppelin-generic",
+              "repo": "https://github.com/OpenZeppelin/polkadot-runtime-templates.git",
+              "ref": "v3.0.0",
+              "folder": "polkadot-runtime-templates/generic-template",
+              "wasm_path": "target/release/wbuild/generic-runtime-template/generic_runtime_template.compact.compressed.wasm",
+              "binary": "generic-template-node",
+              "rust_version": "nightly-2024-10-17",
+              "omni_node_support": false
+            },
+            {
+              "name": "openzeppelin-evm",
+              "repo": "https://github.com/OpenZeppelin/polkadot-runtime-templates.git",
+              "ref": "v3.0.0",
+              "folder": "polkadot-runtime-templates/evm-template",
+              "wasm_path": "target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm",
+              "binary": "evm-template-node",
+              "rust_version": "nightly-2024-06-12",
+              "omni_node_support": false
+            },
+            {
+              "name": "pop-standard",
+              "repo": "https://github.com/r0gue-io/base-parachain.git",
+              "ref": "polkadot-stable2412",
+              "folder": "base-parachain",
+              "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
+              "binary": "parachain-template-node",
+              "rust_version": "1.81",
+              "omni_node_support": false
+            },
+            {
+              "name": "pop-assets",
+              "repo": "https://github.com/r0gue-io/assets-parachain.git",
+              "ref": "polkadot-stable2412",
+              "folder": "assets-parachain",
+              "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
+              "binary": "parachain-template-node",
+              "rust_version": "1.82",
+              "omni_node_support": false
+            },
+            {
+              "name": "pop-contracts",
+              "repo": "https://github.com/r0gue-io/contracts-parachain.git",
+              "ref": "polkadot-stable2409",
+              "folder": "contracts-parachain",
+              "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
+              "binary": "parachain-template-node",
+              "rust_version": "1.77",
+              "omni_node_support": false
+            },
+            {
+              "name": "pop-evm",
+              "repo": "https://github.com/r0gue-io/evm-parachain.git",
+              "ref": "polkadot-stable2407",
+              "folder": "evm-parachain",
+              "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
+              "binary": "parachain-template-node",
+              "rust_version": "1.77",
+              "omni_node_support": false
+            },
+            {
+              "name": "blue-l2",
+              "repo": "https://github.com/paritytech/Blue-L2-Template",
+              "ref": "master",
+              "folder": "Blue-L2-Template",
+              "wasm_path": "target/release/wbuild/blue-L2-template/blue_L2_template.compact.compressed.wasm",
+              "binary": null,
+              "rust_version": "1.85.0",
+              "omni_node_support": true
+            }
+          ]'
+          
+          if [ "${{ github.event.inputs.template }}" == "all" ]; then
+            echo "templates=$ALL_TEMPLATES" >> $GITHUB_OUTPUT
+          else
+            # Filter the array to only include the selected template
+            FILTERED_TEMPLATE=$(echo $ALL_TEMPLATES | jq -c "[.[] | select(.name == \"${{ github.event.inputs.template }}\")]")
+            echo "templates=$FILTERED_TEMPLATE" >> $GITHUB_OUTPUT
+          fi
+
   build-and-push:
+    needs: determine-templates
     runs-on: ${{ matrix.os }}
     timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
-        os: [parity-large, parity-macos]
-        template:
-          - name: polkadot-sdk-parachain
-            repo: https://github.com/paritytech/polkadot-sdk-parachain-template.git
-            ref: master
-            folder: polkadot-sdk-parachain-template
-            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-            binary_path: target/release/parachain-template-node
-            rust_version: nightly-2024-09-11
-            omni_node_support: true
-          - name: frontier
-            repo: https://github.com/polkadot-evm/frontier.git
-            ref: master
-            folder: frontier
-            wasm_path: target/release/wbuild/frontier-template-runtime/frontier_template_runtime.compact.compressed.wasm
-            binary_path: target/release/frontier-template-node
-            rust_version: nightly-2024-02-05
-            omni_node_support: false
-          - name: openzeppelin-generic
-            repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
-            ref: v2.0.1
-            folder: polkadot-runtime-templates/generic-template
-            wasm_path: target/release/wbuild/generic-runtime-template/generic_runtime_template.compact.compressed.wasm
-            binary_path: target/release/generic-template-node
-            rust_version: nightly-2024-06-12
-            omni_node_support: false
-          - name: openzeppelin-evm
-            repo: https://github.com/OpenZeppelin/polkadot-runtime-templates.git
-            ref: v2.0.1
-            folder: polkadot-runtime-templates/evm-template
-            wasm_path: target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm
-            binary_path: target/release/evm-template-node
-            rust_version: nightly-2024-06-12
-            omni_node_support: false
-          - name: pop-standard
-            repo: https://github.com/r0gue-io/base-parachain.git
-            ref: polkadot-stable2412
-            folder: base-parachain
-            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-            binary_path: target/release/parachain-template-node
-            rust_version: nightly-2024-09-04
-            omni_node_support: false
-          - name: pop-assets
-            repo: https://github.com/r0gue-io/assets-parachain.git
-            ref: polkadot-stable2412
-            folder: assets-parachain
-            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-            binary_path: target/release/parachain-template-node
-            rust_version: nightly-2024-10-15
-            omni_node_support: false
-          - name: pop-contracts
-            repo: https://github.com/r0gue-io/contracts-parachain.git 
-            ref: polkadot-stable2409
-            folder: contracts-parachain
-            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-            binary_path: target/release/parachain-template-node
-            rust_version: nightly-2024-09-04
-            omni_node_support: false
-          - name: pop-evm
-            repo: https://github.com/r0gue-io/evm-parachain.git
-            ref: polkadot-stable2407
-            folder: evm-parachain
-            wasm_path: target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm
-            binary_path: target/release/parachain-template-node
-            rust_version: nightly-2024-04-09
-            omni_node_support: false
+        # os: [parity-large, parity-macos] - disable for now
+        os: [parity-large]
+        template: ${{ fromJSON(needs.determine-templates.outputs.templates) }}
 
     steps:
     - name: Install shared dependencies (Linux)
@@ -102,15 +152,6 @@ jobs:
       run: |
         xcode-select --install || true
         brew install openssl pkg-config git curl llvm protobuf jq cmake
-
-    # - name: Set up Docker Buildx
-    #   uses: docker/setup-buildx-action@v3
-
-    # - name: Login to DockerHub
-    #   uses: docker/login-action@v3
-    #   with:
-    #     username: ${{ env.DOCKERHUB_USERNAME }}
-    #     password: ${{ env.DOCKERHUB_TOKEN }}
 
     - name: Clone template repository
       id: template
@@ -162,12 +203,12 @@ jobs:
     - name: Set lowercase OS name
       run: echo "LOWERCASE_OS=$(echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-    - name: Build node
+    - name: Build
       run: |
         cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
         echo "Directory contents:"
-        cargo build --release
+        cargo build --release --locked
         echo "Build completed."
 
     - name: Post-build Cache Debug Info
@@ -180,20 +221,74 @@ jobs:
     - name: Copy output files
       run: |
         mkdir -p output
+        
         echo "Attempting to copy WASM file from: ${{ matrix.template.wasm_path }}"
         cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
-        echo "Attempting to copy binary from: ${{ matrix.template.binary_path }}"
-        cp ${{ matrix.template.folder }}/${{ matrix.template.binary_path }} output/${{ matrix.template.name }} || echo "Failed to copy binary"
+        cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/polkadot-parachain.wasm || echo "Failed to copy WASM file"
+
+        # for the omni-node templates there's no binary to copy
+        if [ "${{ matrix.template.binary }}" != "null" ]; then
+          echo "Attempting to copy binary from: target/release/${{ matrix.template.binary }}"
+          cp ${{ matrix.template.folder }}/target/release/${{ matrix.template.binary }} output/${{ matrix.template.name }} || echo "Failed to copy binary"
+          cp ${{ matrix.template.folder }}/target/release/${{ matrix.template.binary }} output/polkadot-parachain || echo "Failed to copy binary"
+        else
+
+        # create temporary Dockerfile
+        cat <<EOF > Dockerfile
+        FROM docker.io/paritytech/ci-unified:latest as builder
+
+        WORKDIR /polkadot
+        COPY . /polkadot
+
+        RUN cargo fetch
+        RUN cargo build --locked --release
+
+        FROM docker.io/parity/base-bin:latest
+
+        COPY --from=builder /polkadot/target/release/${{ matrix.template.binary }} /usr/local/bin/polkadot-parachain
+        COPY --from=builder /polkadot/${{ matrix.template.wasm_path }} /usr/local/bin/polkadot-parachain.wasm
+
+        USER root
+        RUN useradd -m -u 1001 -U -s /bin/sh -d /polkadot polkadot && \
+          mkdir -p /data /polkadot/.local/share && \
+          chown -R polkadot:polkadot /data && \
+          ln -s /data /polkadot/.local/share/polkadot && \
+        # unclutter and minimize the attack surface
+          rm -rf /usr/bin /usr/sbin && \
+        # check if executable works in this container
+          /usr/local/bin/polkadot-parachain --version
+
+        USER polkadot
+
+        EXPOSE 30333 9933 9944 9615
+        VOLUME ["/data"]
+
+        ENTRYPOINT ["/usr/local/bin/polkadot-parachain"]
+        EOF
+
+
         echo "Output directory contents:"
         ls -R output
 
-    # - name: Build and push Docker image
-    #   uses: docker/build-push-action@v5
-    #   with:
-    #     context: .
-    #     file: ./Dockerfile
-    #     push: true
-    #     tags: ${{ env.DOCKERHUB_USERNAME }}/pdp:${{ matrix.name }}-${{ github.ref }},${{ env.DOCKERHUB_USERNAME }}/pdp:${{ matrix.name }}-latest
+    - name: Set up Docker Buildx
+      if: ${{ matrix.template.binary != null }}
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to DockerHub
+      if: ${{ matrix.template.binary != null }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ env.DOCKERHUB_USERNAME }}
+        password: ${{ env.DOCKERHUB_TOKEN }}
+    - name: Build and push Docker image
+      if: ${{ matrix.template.binary != null }}
+      uses: docker/build-push-action@v5
+      continue-on-error: true
+      with:
+        context: .
+        dockerfile: Dockerfile
+        push: true
+        tags: ${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-${{ github.ref }},${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-latest
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -213,3 +308,5 @@ jobs:
         files: |
           ./output/${{ matrix.template.name }}.wasm
           ./output/${{ matrix.template.name }}
+          ./output/polkadot-parachain
+          ./output/polkadot-parachain.wasm
