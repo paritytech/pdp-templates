@@ -41,7 +41,7 @@ jobs:
               "folder": "polkadot-sdk-parachain-template",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
-              "rust_version": "1.85.0",
+              "rust_version": "1.85.0"
             },
             {
               "name": "openzeppelin-generic",
@@ -50,7 +50,7 @@ jobs:
               "folder": "polkadot-runtime-templates/generic-template",
               "wasm_path": "target/release/wbuild/generic-runtime-template/generic_runtime_template.compact.compressed.wasm",
               "binary": "generic-template-node",
-              "rust_version": "nightly-2024-10-17",
+              "rust_version": "nightly-2024-10-17"
             },
             {
               "name": "openzeppelin-evm",
@@ -59,7 +59,7 @@ jobs:
               "folder": "polkadot-runtime-templates/evm-template",
               "wasm_path": "target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm",
               "binary": "evm-template-node",
-              "rust_version": "nightly-2024-06-12",
+              "rust_version": "nightly-2024-06-12"
             },
             {
               "name": "pop-standard",
@@ -68,7 +68,7 @@ jobs:
               "folder": "base-parachain",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
-              "rust_version": "1.81",
+              "rust_version": "1.81"
             },
             {
               "name": "pop-assets",
@@ -77,7 +77,7 @@ jobs:
               "folder": "assets-parachain",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
-              "rust_version": "1.82",
+              "rust_version": "1.82"
             },
             {
               "name": "pop-contracts",
@@ -86,7 +86,7 @@ jobs:
               "folder": "contracts-parachain",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
-              "rust_version": "1.77",
+              "rust_version": "1.77"
             },
             {
               "name": "pop-evm",
@@ -95,7 +95,7 @@ jobs:
               "folder": "evm-parachain",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
-              "rust_version": "1.77",
+              "rust_version": "1.77"
             },
             {
               "name": "blue-l2",
@@ -104,7 +104,7 @@ jobs:
               "folder": "Blue-L2-Template",
               "wasm_path": "target/release/wbuild/blue-L2-template/blue_L2_template.compact.compressed.wasm",
               "binary": null,
-              "rust_version": "1.85.0",
+              "rust_version": "1.85.0"
             }
           ]'
           
