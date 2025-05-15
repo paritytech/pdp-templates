@@ -2,7 +2,6 @@ Pre-Building different parachain templates
 | Name                  | Repository                                                               | Reference          | Rust Version       |
 |-----------------------|--------------------------------------------------------------------------|--------------------|--------------------|
 | polkadot-sdk-parachain| https://github.com/paritytech/polkadot-sdk-parachain-template.git#master | master             | 1.85.0             |
-| frontier              | https://github.com/polkadot-evm/frontier.git                             | master             | 1.82.0             |
 | openzeppelin-generic  | https://github.com/OpenZeppelin/polkadot-runtime-templates.git           | v3.0.0             | nightly-2024-10-17 |
 | openzeppelin-evm      | https://github.com/OpenZeppelin/polkadot-runtime-templates.git           | v3.0.0             | nightly-2024-06-12 |
 | pop-standard          | https://github.com/r0gue-io/base-parachain.git                           | polkadot-stable2412| 1.81               |
