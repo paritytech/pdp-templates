@@ -99,7 +99,7 @@ jobs:
             },
             {
               "name": "blue-l2",
-              "repo": "https://github.com/paritytech/Blue-L2-Template",
+              "repo": "https://github.com/paritytech/Blue-L2-Template.git",
               "ref": "master",
               "folder": "Blue-L2-Template",
               "wasm_path": "target/release/wbuild/blue-L2-template/blue_L2_template.compact.compressed.wasm",

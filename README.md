@@ -8,4 +8,4 @@ Pre-Building different parachain templates
 | pop-assets            | https://github.com/r0gue-io/assets-parachain.git                         | polkadot-stable2412| 1.82               |
 | pop-contracts         | https://github.com/r0gue-io/contracts-parachain.git                      | polkadot-stable2409| 1.77               |
 | pop-evm               | https://github.com/r0gue-io/evm-parachain.git                            | polkadot-stable2407| 1.77               |
-| blue-l2               | https://github.com/paritytech/Blue-L2-Template                           | master             | 1.85.0             |
+| blue-l2               | https://github.com/paritytech/Blue-L2-Template.git                       | master             | 1.85.0             |
