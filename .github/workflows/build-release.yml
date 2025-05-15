@@ -42,7 +42,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.85.0",
-              "omni_node_support": false
             },
             {
               "name": "openzeppelin-generic",
@@ -52,7 +51,6 @@ jobs:
               "wasm_path": "target/release/wbuild/generic-runtime-template/generic_runtime_template.compact.compressed.wasm",
               "binary": "generic-template-node",
               "rust_version": "nightly-2024-10-17",
-              "omni_node_support": false
             },
             {
               "name": "openzeppelin-evm",
@@ -62,7 +60,6 @@ jobs:
               "wasm_path": "target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm",
               "binary": "evm-template-node",
               "rust_version": "nightly-2024-06-12",
-              "omni_node_support": false
             },
             {
               "name": "pop-standard",
@@ -72,7 +69,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.81",
-              "omni_node_support": false
             },
             {
               "name": "pop-assets",
@@ -82,7 +78,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.82",
-              "omni_node_support": false
             },
             {
               "name": "pop-contracts",
@@ -92,7 +87,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.77",
-              "omni_node_support": false
             },
             {
               "name": "pop-evm",
@@ -102,7 +96,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.77",
-              "omni_node_support": false
             },
             {
               "name": "blue-l2",
@@ -112,7 +105,6 @@ jobs:
               "wasm_path": "target/release/wbuild/blue-L2-template/blue_L2_template.compact.compressed.wasm",
               "binary": null,
               "rust_version": "1.85.0",
-              "omni_node_support": true
             }
           ]'
           
@@ -226,69 +218,72 @@ jobs:
         cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/${{ matrix.template.name }}.wasm || echo "Failed to copy WASM file"
         cp ${{ matrix.template.folder }}/${{ matrix.template.wasm_path }} output/polkadot-parachain.wasm || echo "Failed to copy WASM file"
 
-        # for the omni-node templates there's no binary to copy
+        # for the omninode-only templates there's no binary to copy
         if [ "${{ matrix.template.binary }}" != "null" ]; then
           echo "Attempting to copy binary from: target/release/${{ matrix.template.binary }}"
           cp ${{ matrix.template.folder }}/target/release/${{ matrix.template.binary }} output/${{ matrix.template.name }} || echo "Failed to copy binary"
           cp ${{ matrix.template.folder }}/target/release/${{ matrix.template.binary }} output/polkadot-parachain || echo "Failed to copy binary"
         else
+          echo "No binary to copy, skipping"
+        fi
 
         # create temporary Dockerfile
-        cat <<EOF > Dockerfile
-        FROM docker.io/paritytech/ci-unified:latest as builder
+        # cat <<EOF > Dockerfile
+        # FROM docker.io/paritytech/ci-unified:latest as builder
 
-        WORKDIR /polkadot
-        COPY . /polkadot
+        # WORKDIR /polkadot
+        # COPY . /polkadot
 
-        RUN cargo fetch
-        RUN cargo build --locked --release
+        # RUN cargo fetch
+        # RUN cargo build --locked --release
 
-        FROM docker.io/parity/base-bin:latest
+        # FROM docker.io/parity/base-bin:latest
 
-        COPY --from=builder /polkadot/target/release/${{ matrix.template.binary }} /usr/local/bin/polkadot-parachain
-        COPY --from=builder /polkadot/${{ matrix.template.wasm_path }} /usr/local/bin/polkadot-parachain.wasm
+        # COPY --from=builder /polkadot/target/release/${{ matrix.template.binary }} /usr/local/bin/polkadot-parachain
+        # COPY --from=builder /polkadot/${{ matrix.template.wasm_path }} /usr/local/bin/polkadot-parachain.wasm
 
-        USER root
-        RUN useradd -m -u 1001 -U -s /bin/sh -d /polkadot polkadot && \
-          mkdir -p /data /polkadot/.local/share && \
-          chown -R polkadot:polkadot /data && \
-          ln -s /data /polkadot/.local/share/polkadot && \
-        # unclutter and minimize the attack surface
-          rm -rf /usr/bin /usr/sbin && \
-        # check if executable works in this container
-          /usr/local/bin/polkadot-parachain --version
+        # USER root
+        # RUN useradd -m -u 1001 -U -s /bin/sh -d /polkadot polkadot && \
+        #   mkdir -p /data /polkadot/.local/share && \
+        #   chown -R polkadot:polkadot /data && \
+        #   ln -s /data /polkadot/.local/share/polkadot && \
+        # # unclutter and minimize the attack surface
+        #   rm -rf /usr/bin /usr/sbin && \
+        # # check if executable works in this container
+        #   /usr/local/bin/polkadot-parachain --version
 
-        USER polkadot
+        # USER polkadot
 
-        EXPOSE 30333 9933 9944 9615
-        VOLUME ["/data"]
+        # EXPOSE 30333 9933 9944 9615
+        # VOLUME ["/data"]
 
-        ENTRYPOINT ["/usr/local/bin/polkadot-parachain"]
-        EOF
+        # ENTRYPOINT ["/usr/local/bin/polkadot-parachain"]
+        # EOF
 
 
-        echo "Output directory contents:"
-        ls -R output
+        # echo "Output directory contents:"
+        # ls -R output
 
-    - name: Set up Docker Buildx
-      if: ${{ matrix.template.binary != null }}
-      uses: docker/setup-buildx-action@v3
+    # - name: Set up Docker Buildx
+    #   if: ${{ matrix.template.binary != null }}
+    #   uses: docker/setup-buildx-action@v3
 
-    - name: Login to DockerHub
-      if: ${{ matrix.template.binary != null }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ env.DOCKERHUB_USERNAME }}
-        password: ${{ env.DOCKERHUB_TOKEN }}
-    - name: Build and push Docker image
-      if: ${{ matrix.template.binary != null }}
-      uses: docker/build-push-action@v5
-      continue-on-error: true
-      with:
-        context: .
-        dockerfile: Dockerfile
-        push: true
-        tags: ${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-${{ github.ref }},${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-latest
+    # - name: Login to DockerHub
+    #   if: ${{ matrix.template.binary != null }}
+    #   uses: docker/login-action@v3
+    #   with:
+    #     username: ${{ env.DOCKERHUB_USERNAME }}
+    #     password: ${{ env.DOCKERHUB_TOKEN }}
+    # - name: Build and push Docker image
+    #   if: ${{ matrix.template.binary != null }}
+    #   uses: docker/build-push-action@v5
+    #   continue-on-error: true
+    #   with:
+    #     context: .
+    #     dockerfile: Dockerfile
+    #     push: true
+    #     tags: ${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-${{ github.ref }},${{ env.DOCKERHUB_USERNAME }}/pdp-template:${{ matrix.name }}-latest
+    # TODO: Create issue with listed repositories to push it to paritytech org
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
