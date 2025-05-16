@@ -37,7 +37,7 @@ jobs:
             {
               "name": "polkadot-sdk-parachain",
               "repo": "https://github.com/paritytech/polkadot-sdk-parachain-template.git",
-              "ref": "master",
+              "ref": "v0.0.4",
               "folder": "polkadot-sdk-parachain-template",
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
@@ -96,15 +96,6 @@ jobs:
               "wasm_path": "target/release/wbuild/parachain-template-runtime/parachain_template_runtime.compact.compressed.wasm",
               "binary": "parachain-template-node",
               "rust_version": "1.77"
-            },
-            {
-              "name": "blue-l2",
-              "repo": "https://github.com/paritytech/Blue-L2-Template.git",
-              "ref": "master",
-              "folder": "Blue-L2-Template",
-              "wasm_path": "target/release/wbuild/blue-L2-template/blue_L2_template.compact.compressed.wasm",
-              "binary": null,
-              "rust_version": "1.85.0"
             }
           ]'
           
