@@ -100,7 +100,7 @@ jobs:
           ]'
           
           if [ "${{ github.event.inputs.template }}" == "all" ]; then
-            echo "templates=$ALL_TEMPLATES" >> $GITHUB_OUTPUT
+            echo "templates=$(echo $ALL_TEMPLATES | jq -c)" >> $GITHUB_OUTPUT
           else
             # Filter the array to only include the selected template
             FILTERED_TEMPLATE=$(echo $ALL_TEMPLATES | jq -c "[.[] | select(.name == \"${{ github.event.inputs.template }}\")]")
