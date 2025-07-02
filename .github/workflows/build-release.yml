@@ -12,6 +12,7 @@ on:
           - polkadot-sdk-parachain
           - openzeppelin-generic
           - openzeppelin-evm
+          - frontier-evm
           - pop-standard
           - pop-assets
           - pop-contracts
@@ -60,6 +61,15 @@ jobs:
               "wasm_path": "target/release/wbuild/evm-runtime-template/evm_runtime_template.compact.compressed.wasm",
               "binary": "evm-template-node",
               "rust_version": "nightly-2024-06-12"
+            },
+            {
+              "name": "frontier-evm",
+              "repo": "https://github.com/polkadot-evm/frontier.git",
+              "ref": "master",
+              "folder": "frontier",
+              "wasm_path": "target/release/wbuild/frontier-template-runtime/frontier_template_runtime.compact.compressed.wasm",
+              "binary": "frontier-template-node",
+              "rust_version": "1.82.0"
             },
             {
               "name": "pop-standard",
