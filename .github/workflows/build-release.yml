@@ -200,8 +200,16 @@ jobs:
       run: |
         cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
-        echo "Directory contents:"
-        cargo build --release --locked
+        case "${{ matrix.template.folder }}" in 
+          "frontier-evm"|"blue-l2")
+            echo "Building without metadata-hash feature"
+            cargo build --release --locked
+            ;;
+          *)
+            echo "Building metadata-hash feature"
+            cargo build --release --locked --features metadata-hash
+            ;;
+        esac
         echo "Build completed."
 
     - name: Post-build Cache Debug Info
