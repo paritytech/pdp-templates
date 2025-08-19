@@ -199,7 +199,7 @@ jobs:
       run: |
         cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
-        case "${{ matrix.template.folder }}" in 
+        case "${{ matrix.template.name }}" in 
           "frontier-evm")
             echo "Building without metadata-hash feature"
             cargo build --release --locked
