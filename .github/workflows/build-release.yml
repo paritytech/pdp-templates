@@ -17,7 +17,6 @@ on:
           - pop-assets
           - pop-contracts
           - pop-evm
-          - blue-l2
 
 env:
   CARGO_TERM_COLOR: always
@@ -201,7 +200,7 @@ jobs:
         cd ${{ matrix.template.folder }}
         echo "Current directory: $(pwd)"
         case "${{ matrix.template.folder }}" in 
-          "frontier-evm"|"blue-l2")
+          "frontier-evm")
             echo "Building without metadata-hash feature"
             cargo build --release --locked
             ;;
